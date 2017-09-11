@@ -51,15 +51,16 @@ class AutoPierChange(ChimeraObject):
         self.telescope.slewComplete += slewComplete
 
     def control(self):
-        if self.pierPos == TelescopePierSide.EAST:
-            ha = CoordUtil.raToHa(self.telescope.getRa(), self.site.LST()).H
-            if ha >= self["ha_flip"]:
-                self.log.debug("Flipping telescope pier...")
-                t0 = time.time()
-                self.telescope.slewToRaDec(self.telescope.getPositionRaDec())
-                if self.dome is not None:
-                    self.log.debug("Syncing dome...")
-                    self.dome.syncWithTel()
-                self.log.debug("Flipping telescope pier: took %3.2f s.", time.time() - t0)
+        if self.telescope.isTracking():
+            if self.pierPos == TelescopePierSide.EAST:
+                ha = CoordUtil.raToHa(self.telescope.getRa(), self.site.LST()).H
+                if ha >= self["ha_flip"]:
+                    self.log.debug("Flipping telescope pier...")
+                    t0 = time.time()
+                    self.telescope.slewToRaDec(self.telescope.getPositionRaDec())
+                    if self.dome is not None:
+                        self.log.debug("Syncing dome...")
+                        self.dome.syncWithTel()
+                    self.log.debug("Flipping telescope pier: took %3.2f s.", time.time() - t0)
 
         return True
