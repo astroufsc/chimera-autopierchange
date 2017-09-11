@@ -44,23 +44,27 @@ class AutoPierChange(ChimeraObject):
                     self.pierPos = TelescopePierSide.EAST
                 else:
                     self.pierPos = TelescopePierSide.WEST
-                self.log.debug("Telescope moved to %s, LST is %s, HA is %s.", str(self.pierPos),
+                self.log.debug("Telescope moved to %s, LST is %s, RA, DEC is %s.", str(self.pierPos),
                                str(self.site.LST()), str(position))
 
         self.telescope = self.getManager().getProxy(self["telescope"])
         self.telescope.slewComplete += slewComplete
 
     def control(self):
-        if not self.telescope.isSlewing() and self.telescope.isTracking():
-            if self.pierPos == TelescopePierSide.EAST:
-                ha = CoordUtil.raToHa(self.telescope.getRa(), self.site.LST()).H
-                if ha >= self["ha_flip"]:
-                    self.log.debug("Flipping telescope pier...")
-                    t0 = time.time()
-                    self.telescope.slewToRaDec(self.telescope.getPositionRaDec())
-                    if self.dome is not None:
-                        self.log.debug("Syncing dome...")
-                        self.dome.syncWithTel()
-                    self.log.debug("Flipping telescope pier: took %3.2f s.", time.time() - t0)
+        try:
+            if not self.telescope.isSlewing() and self.telescope.isTracking():
+                if self.pierPos == TelescopePierSide.EAST:
+                    ha = CoordUtil.raToHa(self.telescope.getRa(), self.site.LST()).H
+                    if ha >= self["ha_flip"]:
+                        self.log.debug("Control. HA = %3.2f", ha)
+                        self.log.debug("Flipping telescope pier...")
+                        t0 = time.time()
+                        self.telescope.slewToRaDec(self.telescope.getPositionRaDec())
+                        if self.dome is not None:
+                            self.log.debug("Syncing dome...")
+                            self.dome.syncWithTel()
+                        self.log.debug("Flipping telescope pier: took %3.2f s.", time.time() - t0)
+        except:  # FIXME: This exception can be too agressive, but we do not want the controller dead for silly reasons.
+            pass
 
         return True
