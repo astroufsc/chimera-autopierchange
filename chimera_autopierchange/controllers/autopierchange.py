@@ -51,7 +51,7 @@ class AutoPierChange(ChimeraObject):
         self.telescope.slewComplete += slewComplete
 
     def control(self):
-        if self.telescope.isTracking():
+        if not self.telescope.isSlewing() and self.telescope.isTracking():
             if self.pierPos == TelescopePierSide.EAST:
                 ha = CoordUtil.raToHa(self.telescope.getRa(), self.site.LST()).H
                 if ha >= self["ha_flip"]:
